@@ -1,0 +1,527 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{mathptmx}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{atbegshi}
+\usepackage{fancyhdr}
+
+\usepackage{url}
+\usepackage{array}
+\usepackage{longtable}
+
+\definecolor{navy}{rgb}{0.12,0.31,0.47}
+\definecolor{midblue}{rgb}{0.27,0.45,0.77}
+\definecolor{lightgray}{rgb}{0.54,0.54,0.54}
+\definecolor{darkred}{rgb}{0.62,0.16,0.17}
+\definecolor{darkgreen}{rgb}{0.18,0.43,0.23}
+\definecolor{paleblue}{rgb}{0.92,0.94,0.97}
+\definecolor{palered}{rgb}{0.96,0.91,0.91}
+\definecolor{palegray}{rgb}{0.94,0.94,0.94}
+
+% Neat blue border on every page
+\newcommand{\bluepageborder}{%
+  \AtBeginShipoutUpperLeft{%
+    \color{navy}\linethickness{1pt}%
+    \put(28,-28){\framebox(556,736){}}%
+  }%
+}
+\AtBeginShipout{\bluepageborder}
+
+\linespread{1.15}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\small\thepage}
+\fancyhead[L]{\footnotesize\color{navy}DOC-1-044}
+\fancyhead[R]{\footnotesize\color{navy}Science Program}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcommand{\psec}[2]{\par\vspace{14pt}{\color{navy}\large\bfseries #1\quad #2}\par\vspace{6pt}}
+\newcommand{\psub}[1]{\par\vspace{8pt}{\color{navy}\normalsize\bfseries #1}\par\vspace{4pt}}
+
+\begin{document}
+
+% ================= TITLE PAGE =================
+\thispagestyle{empty}
+\begin{center}
+\vspace*{30pt}
+{\color{navy}\rule{\textwidth}{1.5pt}}\\[2pt]
+{\color{navy}\rule{\textwidth}{0.5pt}}
+
+\vspace{26pt}
+{\color{navy}\Large\bfseries Domain-Adversarial Prediction of Cancer-Drug Synergy Across Open Screens (DOC-1-044):}\\[10pt]
+{\color{navy}\large\bfseries An Invalid, Not-Evaluable Execution Under a Prospectively Locked Preprocessing Rule}\\[8pt]
+{\color{navy}\rule{0.6\textwidth}{0.5pt}}
+
+\vspace{22pt}
+{\normalsize Science Program \quad SP-041 / DOC-1-044}\\[4pt]
+{\normalsize September 23, 2026}\\[4pt]
+{\normalsize Udita Phookan}\\[2pt]
+{\small Open-data computational research; preregistered design with locked gates. AI tooling assistance disclosed in Section 9.}
+
+\vspace{26pt}
+\fcolorbox{darkred}{palered}{\parbox{0.78\textwidth}{\centering\vspace{6pt}
+{\color{darkred}\large\bfseries VERDICT: INVALID / NOT EVALUABLE}\\[4pt]
+{\color{darkred}\small 0 of 4 locked gates evaluable \quad models\_trained = 0 \quad zero success credit \quad program count 41/200}\\[2pt]
+{\color{darkred}\small Not a negative result. Not evidence for or against DANN transfer.}
+\vspace{6pt}}}
+
+\vspace{24pt}
+\begin{minipage}{0.85\textwidth}
+\centering\small
+\textbf{Headline.} The prospectively locked A-2 preprocessing rule, which forbids clipping and requires all ZIP response inputs inside [0,1], excluded 406,650 of 406,749 dose-matrix blocks because raw DrugComb v1.4 percent-inhibition values routinely fall outside [0,100]. The entire locked external target (ALMANAC) and two of three source studies were removed before modeling. No model was trained; no gate was evaluable. The invalid outcome is preserved and reported exactly as executed.
+\end{minipage}
+
+\vspace{20pt}
+{\color{navy}\rule{\textwidth}{0.5pt}}\\[2pt]
+{\color{navy}\rule{\textwidth}{1.5pt}}
+\end{center}
+\clearpage
+
+% ================= ABSTRACT =================
+\psec{}{Abstract}
+Drug-combination screens measure whether two drugs together outperform what their single-agent dose responses predict. Cross-study prediction of synergy, where a model trained on some screens is applied to a held-out screen, is a standing benchmark problem because experimental protocols, dose settings, and measurement pipelines differ across studies. This experiment (DOC-1-044) asked whether a gradient-reversal domain-adversarial neural network (DANN), trained on three labeled DrugComb studies (O'Neil, FORCINA, Mathews) with unlabeled features from a locked external target (ALMANAC), improves rank prediction of held-out ZIP synergy relative to an architecture-matched source-only model. The design, data version, eligibility rules, features, splits, seeds, models, four quantitative success gates, and failure policy were frozen in a preregistration lock before any outcome-bearing value was accessed; two prospective, schema-only amendments (A-1, A-2) fixed the ZIP computation implementation and response-scale handling before any ZIP value was computed. Execution then stopped at preprocessing: raw DrugComb v1.4 percent-inhibition values frequently lie outside [0,100], the amended lock's deterministic conversion therefore produced response values outside [0,1], and the locked whole-block exclusion rule removed 406,650 of 406,749 blocks, including every ALMANAC block. Ninety-one Mathews blocks (19 triplets) remained, a preprocessing remnant that is not a scientific subgroup result. All four locked gates are NOT EVALUABLE and the experiment is classified INVALID: it is not a negative result and carries zero success credit, and it is not evidence for or against the DANN hypothesis. The deliverables of this executed experiment are a complete, hash-chained audit trail, a reusable streaming preprocessor/auditor that enforces the locked rules at constant memory over 2.0 GB of raw data, and a precise account of why strict response-domain assumptions broke on a harmonized raw dataset. A rerun is permitted only as a newly numbered experiment with a new pre-outcome lock registering an explicit handling rule for raw inhibitions outside [0,100].
+
+\vspace{6pt}
+{\color{navy}\bfseries Keywords:} drug synergy; ZIP model; domain-adversarial neural network; preregistration; locked gates; invalid experiment; DrugComb; ALMANAC; reproducibility; audit trail
+\clearpage
+
+% ================= 1. INTRODUCTION =================
+\psec{1.}{Introduction and hypothesis}
+
+\psub{1.1 Problem}
+Cancer therapy increasingly relies on drug combinations, and large public screens such as NCI-ALMANAC and the studies aggregated in DrugComb measure combination dose-response at scale. A practical question follows: can synergy be predicted for a new screen from models trained on existing ones? The published feasibility evidence says the problem is hard. Dose-setting variation across studies is a major obstacle, and models that perform well inside one study can degrade sharply under cross-study transfer. A domain-adversarial neural network (DANN) is a standard candidate remedy: a gradient-reversal layer penalizes representations that identify the source study, pushing the encoder toward study-invariant features. Whether that invariance helps or erases biology under strict external transfer is an open empirical question.
+
+\psub{1.2 Hypothesis}
+The preregistered hypothesis, frozen before any outcome access: a gradient-reversal domain-adversarial encoder trained on labeled O'Neil, FORCINA, and Mathews examples plus unlabeled ALMANAC inputs will learn study-invariant representations and improve rank prediction of held-out ALMANAC ZIP synergy relative to an architecture-matched source-only empirical-risk-minimization (ERM) model.
+
+\psub{1.3 Success criteria preview}
+Four quantitative gates were locked: (G1) DANN ALMANAC Spearman $\rho \geq 0.30$; (G2) DANN minus ERM Spearman $\rho \geq 0.05$; (G3) lower bound of a paired, drug-pair-clustered 95\% bootstrap confidence interval for the difference greater than 0; (G4) a guardrail requiring DANN native-scale MAE no worse than 1.05 times ERM MAE. The full gate table with locked timestamps appears in Section 3.5.
+
+\psub{1.4 What this paper is, and what it is not}
+This paper reports an executed experiment whose locked preprocessing removed the cohort before modeling. Under the preregistration's own failure policy, the run is INVALID and NOT EVALUABLE: it is not a positive, not a partial, and not an informative negative, because the locked pipeline never produced a trainable cohort or an evaluable target, and an informative negative requires a valid pipeline that establishes a boundary. Nothing here speaks for or against the DANN hypothesis. What the experiment contributes instead is (a) a complete, independently verified audit chain from lock to verdict; (b) a reusable streaming preprocessor and cohort auditor that executes the locked rules over the full 2.0 GB raw archive at constant memory; and (c) a precise, reproducible account of why a strict response-domain assumption, reasonable in isolation, breaks when applied to harmonized raw percent-inhibition data. Program policy preserves invalid runs with the same rigor as positives and negatives; this paper is that preservation, packaged to the program's submission-grade standard.
+\clearpage
+
+% ================= 2. BACKGROUND =================
+\psec{2.}{Background and related work}
+
+\psub{2.1 Drug-combination screening and DrugComb}
+DrugComb aggregates cancer drug-combination screens into a harmonized repository distributed under CC BY 4.0, with a versioned raw archive on Zenodo (record 18449193, v1.4, published 2026-02-01). The four largest studies are ALMANAC, O'Neil, FORCINA, and Mathews. The v1.4 raw archive contains per-row concentration-response records (block identifier, row and column concentrations with units, percent inhibition, drug and cell-line identifiers, and a study label) rather than precomputed synergy scores. Synergy must therefore be derived from the raw matrices, which makes the derivation pipeline part of the experiment's registered design.
+
+\psub{2.2 Synergy quantification with ZIP}
+The Zero Interaction Potency (ZIP) model compares observed combination responses to a reference built from the two monotherapy dose-response curves, assuming each drug acts as if the other were its own replicate. ZIP deltas summarize deviation from that reference. In this experiment, ZIP is computed with the \texttt{synergy} Python package pinned to exactly version 1.0.0, whose implementation requires response inputs in [0,1]. That strict response domain is a software property, not a biological one; Section 5 examines its interaction with raw screening data.
+
+\psub{2.3 Cross-study transfer}
+A published cross-study feasibility study of the same four DrugComb studies performs one-versus-one and three-versus-one inter-study validation and identifies dose-setting variation as a major transfer problem, with publicly available code. It establishes that harmonization and cross-study evaluation are possible, and that they are hard. It does not test domain-adversarial training under a locked external holdout, which is the gap this experiment targeted.
+
+\psub{2.4 Domain-adversarial training}
+DANN attaches a domain classifier through a gradient-reversal layer so the shared encoder is rewarded for task performance and penalized for encoding domain identity. The method is well established for distribution shift in images and text, with a growing record in biomedical prediction. Its failure mode is symmetric to its promise: removing domain information can remove the very signal that carries the biology. The preregistered design therefore paired the DANN against an architecture-matched ERM control, with source-mean and ridge baselines, a label-permutation leakage check, and a domain-prediction diagnostic.
+
+\psub{2.5 Preregistration and locked gates}
+The program's standing policy: every experiment locks its question, data version, eligibility rules, features, splits, seeds, models, gates, uncertainty method, failure policy, and compute budget before outcomes are seen; honest negatives are preserved rather than re-fished; invalid runs are labeled invalid, not negative. The lock permits unavoidable schema-only amendments made before any outcome is computed or summarized, stored beside the original lock. This experiment used that provision twice (A-1, A-2), and the amendments' timing is part of the audit chain in Appendix A.
+
+\psub{2.6 Novelty statement}
+\begin{itemize}\setlength{\itemsep}{1pt}
+\item A fully preregistered cross-study DANN evaluation on DrugComb v1.4 with a hash-chained lock, fixed seeds, and a sealed external target; to our knowledge the first such locked evaluation on this archive version.
+\item A byte-verified, per-block exclusion audit over all 406,749 dose matrices in the four largest studies, quantifying exactly how a strict [0,1] response-domain requirement interacts with raw percent-inhibition data at scale.
+\item A reusable streaming preprocessor/auditor implementing the locked rules at constant memory, with a machine-readable verdict contract suitable for automated ledgers.
+\item A documented invalid-run package, archived with the same completeness as a positive result, demonstrating the program's failure policy in operation.
+\end{itemize}
+\clearpage
+% ================= 3. METHODOLOGY =================
+\psec{3.}{Methodology, including locked gates}
+
+\psub{3.1 Data}
+The sole data source is DrugComb raw data v1.4, Zenodo record 18449193, three files: \texttt{drugcomb\_data\_v1.4.csv} (2,008,117,325 bytes), \texttt{DrugComb\_drug\_identifiers.xlsx}, and \texttt{DrugComb\_cell\_line\_identifiers.xlsx}. All three were downloaded and verified against their posted MD5 digests before any inspection; local SHA-256 values are recorded in the raw manifest (Appendix D). Availability evidence and documentation sources are listed in the lock; no values from the outcome table were accessed during Phase 0.
+
+\psub{3.2 Frozen cohort and study mapping}
+The prediction unit is an unordered (canonical drug A, canonical drug B, canonical cell line) triplet within one source study; the outcome is the mean ZIP across valid dose matrices and replicates for that triplet. Labeled source domains: O'Neil, FORCINA, Mathews. Locked external target: ALMANAC. Study membership is determined only by the exact study field after trimming and case-folding, with the frozen explicit map ALMANAC$\to$ALMANAC, ONEIL$\to$O'Neil, Mathews$\to$Mathews, FORCINA$\to$FORCINA; no other alias is admitted.
+
+\psub{3.3 Locked preprocessing (amendments A-1 and A-2)}
+Schema-only inspection of the v1.4 header established that the archive carries raw percent-inhibition measurements and no precomputed synergy column. Because the lock froze ZIP as the outcome without freezing a derivation pipeline, two prospective schema amendments were sealed under the lock's amendment provision before any ZIP value was computed or summarized. A-1 pinned the implementation (synergy==1.0.0 with \texttt{use\_jacobian=True}), the monotherapy Hill-fit rules (per-block fits on that block's own monotherapy rows, E0 fixed, minimum four usable dose points, no imputation), the exact runtime environment, micromolar unit conversion, missing-dose whole-block exclusion, block construction by \texttt{block\_id}, and the fixed step order. A-2 fixed the effect orientation and scale: for every finite raw percent-inhibition $I$, the response is $E=(100-I)/100$ with fixed untreated response $E_0=1.0$; values outside [0,1] after this deterministic conversion cause exclusion of the whole block, with no clipping, winsorization, or imputation, because ZIP v1.0.0 requires responses in [0,1]. A-2 also fixed conversion of each returned ZIP delta to native DrugComb percentage-point units as $100\times\delta$ before aggregation, and the study-label map above. The within-matrix scalarization (the mean of per-point $100\times\delta$ values) was prospectively sealed in this amendment chain and uniformly applied to every block; no block received any other treatment. Section 5.2 of the original lock (the success gates) is unchanged by both amendments.
+
+\psub{3.4 Features (as locked)}
+Each drug: radius-2, 2048-bit Morgan fingerprint from canonical SMILES (RDKit); the pair representation is order-invariant (elementwise sum and absolute difference). Cell line: one-hot over the canonical vocabulary with an UNK level. No dose, monotherapy response, omics, study name, or target-derived feature enters the synergy regressor; the domain head alone receives domain labels.
+
+\psub{3.5 Locked gates}
+Table G1 (T1) reproduces every gate with its threshold, metric, evaluation split, and lock timestamp evidence. All gates were sealed before any result was inspected: original lock sealed 01:53:57 IST on 2026-09-23, amendment A-1 sealed 01:57:25 IST, amendment A-2 sealed 02:00:54 IST, and the first outcome-bearing outputs were produced at 02:17:15 IST. No gate was edited, added, or removed after results were seen. The full hash chain appears in Appendix A.
+
+\begin{center}
+\small
+\textbf{\color{navy}T1 (G1 log). Locked gates and outcomes.}\\[4pt]
+\begin{tabular}{|p{4.6cm}|p{3.2cm}|p{2.6cm}|p{2.6cm}|p{2.2cm}|}
+\hline
+\textbf{Gate} & \textbf{Threshold} & \textbf{Split} & \textbf{Locked at (IST)} & \textbf{Outcome} \\
+\hline
+G1: DANN ALMANAC Spearman $\rho$ & $\geq 0.30$ & ALMANAC (sealed external) & 01:53:57 (L0); reaffirmed A-2 02:00:54 & NOT EVALUABLE \\
+\hline
+G2: DANN $-$ ERM Spearman $\rho$ & $\geq 0.05$ & ALMANAC (sealed external) & 01:53:57 (L0); reaffirmed A-2 02:00:54 & NOT EVALUABLE \\
+\hline
+G3: Paired bootstrap 95\% CI lower bound (pair-clustered, 10{,}000 reps, seed 44044) & $> 0$ & ALMANAC (sealed external) & 01:53:57 (L0); reaffirmed A-2 02:00:54 & NOT EVALUABLE \\
+\hline
+G4 (guardrail): DANN MAE / ERM MAE & $\leq 1.05$ & ALMANAC (sealed external) & 01:53:57 (L0); reaffirmed A-2 02:00:54 & NOT EVALUABLE \\
+\hline
+\end{tabular}
+\end{center}
+
+\psub{3.6 Locked models and evaluation protocol (for the record)}
+ERM control: encoder with two hidden layers (512, 128; ReLU; dropout 0.2) and a 64-unit regression head; AdamW, learning rate $10^{-3}$, weight decay $10^{-4}$, batch 256, at most 200 epochs, early stopping on source validation MSE with patience 20. DANN: the identical model plus a (128, 64) four-way domain classifier through gradient reversal with $\lambda(p)=2/(1+e^{-10p})-1$; batches balanced by source domain with an equal-sized unlabeled ALMANAC feature batch; checkpoint selection on source validation MSE only. Fixed seeds 1044, 2044, 3044; per-triplet predictions averaged across seeds before primary evaluation. Source partition: deterministic grouped split on unordered drug pairs by SHA-256 ranking (80/20), with a cohort-size-triggered 5-fold grouped cross-validation fallback. ALMANAC triplets are test-only; their ZIP outcomes remain sealed until all source-only fitting, selection, and checkpoint choice are complete. Controls and nulls: source-mean null, ridge baseline ($\alpha=1.0$), label-permutation leakage check (seed 944044), domain-prediction diagnostic, drug-order invariance assertion, and a leakage audit. None of this was executed: the cohort did not survive locked preprocessing, and the failure policy forbids proceeding with a substituted cohort.
+
+\psub{3.7 Compute budget}
+Locked caps: 10 GB storage; 8 CPU-hours and 32 GB RAM for preprocessing; 12 GPU-hours training; 4 CPU-hours evaluation; 24-hour wall-clock target. Actual consumption: data storage 2.0 GB (raw archive) plus derived artifacts; preprocessing approximately 14 minutes CPU on a memory-constrained worker; zero training and zero evaluation. All caps respected.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/F1-pipeline.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F1.} Locked pipeline with preregistration checkpoints. n = 406,749 blocks at cohort selection. The red gate is the locked A-2 whole-block range rule; downstream stages are shown as locked but never reached. Takeaway: the experiment stopped at preprocessing by design of the lock, not by choice after results.}
+\end{figure}
+
+% ================= 4. RESULTS =================
+\psec{4.}{Results}
+
+\psub{4.1 What was executed}
+The full locked preprocessing pipeline ran end to end over the four-study cohort: 7,442,556 selected rows forming 406,749 dose-matrix blocks. Raw-file integrity was verified against posted MD5 digests before processing. Every step order, exclusion rule, and conversion follows the sealed amendments. No model was trained (\texttt{models\_trained = 0} in the machine-readable verdict; the predictions file contains only its header row).
+
+\psub{4.2 Cohort accounting (the primary and only outcome)}
+Under the locked A-2 conversion $E=(100-I)/100$, raw DrugComb v1.4 percent-inhibition values frequently fall outside [0,100], producing response values outside [0,1]. The locked rule excludes the whole block in that case and forbids clipping. This removed 406,650 of 406,749 blocks: 311,604 of 311,604 ALMANAC blocks, 92,208 of 92,208 O'Neil blocks, 1,818 of 1,818 FORCINA blocks, and 1,020 of 1,119 Mathews blocks. Of the 99 blocks that survived the range rule, 7 were excluded as same-drug blocks and 1 failed its Hill fit (\emph{Residuals are not finite in the initial point}), leaving 91 included blocks, all Mathews, aggregating to 19 triplets. Figure F2 shows the attrition; Figure F5 shows exclusion reasons and the per-study split; Table T2 summarizes the data; Table T4 gives the exclusion-reason breakdown by study.
+
+\begin{center}
+\small
+\textbf{\color{navy}T2. Data summary.}\\[4pt]
+\begin{tabular}{|p{3.4cm}|p{4.6cm}|p{3.4cm}|}
+\hline
+\textbf{Item} & \textbf{Value} & \textbf{Verification} \\
+\hline
+Source & DrugComb v1.4, Zenodo 18449193 (CC BY 4.0) & posted MD5s verified 01:53:26--01:53:37 IST \\
+\hline
+Raw archive & 2,008,117,325 bytes, 3 files & local SHA-256 in raw manifest (Appendix D) \\
+\hline
+Selected rows / blocks & 7,442,556 / 406,749 (four studies) & preprocess audit JSON \\
+\hline
+Range-excluded blocks & 406,650 & block audit CSV (independently recounted) \\
+\hline
+Other exclusions & 7 same-drug; 1 Hill-fit failure & block audit CSV \\
+\hline
+Included blocks / triplets & 91 / 19 (all Mathews) & block audit CSV; triplets CSV \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/F2-attrition.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F2.} Cohort attrition under the locked rules, log scale. n = 406,749 blocks. Takeaway: one locked preprocessing rule, not any modeling decision, determined the experiment's outcome.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/F5-exclusions.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F5.} Exclusion diagnostics. (a) reasons across all blocks; (b) selected versus included blocks by study, log scale. Takeaway: ALMANAC, O'Neil, and FORCINA lost every block to the range rule; only Mathews retained any.}
+\end{figure}
+
+\psub{4.3 Gate outcomes}
+All four locked gates are NOT EVALUABLE: there is no labeled three-source training cohort and no ALMANAC external target, so no Spearman correlation, difference, bootstrap interval, or MAE ratio exists. Table T3 records this exactly; Figure F4 shows the gate panel. No secondary endpoint, subgroup result, permutation null, domain diagnostic, or invariance test is computable, and none was attempted.
+
+\begin{center}
+\small
+\textbf{\color{navy}T3. Primary result versus baselines.}\\[4pt]
+\begin{tabular}{|p{5.2cm}|p{3.4cm}|p{3.2cm}|}
+\hline
+\textbf{Comparison} & \textbf{Locked metric} & \textbf{Result} \\
+\hline
+DANN vs observed ALMANAC ZIP & Spearman $\rho$ (threshold $\geq 0.30$) & NOT EVALUABLE \\
+\hline
+DANN vs ERM control & $\Delta$ Spearman $\rho$ (threshold $\geq 0.05$) & NOT EVALUABLE \\
+\hline
+DANN vs ERM paired interval & bootstrap 95\% CI lower bound ($>0$) & NOT EVALUABLE \\
+\hline
+DANN vs ERM guardrail & MAE ratio ($\leq 1.05$) & NOT EVALUABLE \\
+\hline
+DANN/ERM vs source-mean null & MAE, $\rho$ & NOT EVALUABLE \\
+\hline
+DANN/ERM vs ridge baseline & MAE, $\rho$ & NOT EVALUABLE \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/F4-gates.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F4.} Locked gate outcome panel. n = 0 trained models. Takeaway: every gate is NOT EVALUABLE because no cohort survived preprocessing; nothing here measures the DANN hypothesis.}
+\end{figure}
+
+\psub{4.4 The 91-block remnant}
+The 91 retained Mathews blocks (19 triplets; full listing in Appendix B) are a preprocessing remnant. Their block-level ZIP values are distributed near zero with a mean of $-1.83$ native percentage points (Figure F3). They are reported for completeness and auditability only. They are not a scientific subgroup result, support no efficacy or synergy claim, and cannot rescue, soften, or reinterpret the NOT-EVALUABLE gates. The 19-triplet reconciliation (91 blocks $\to$ 19 triplets by study-drug-drug-cell-line aggregation, with per-triplet block counts of 1, 4, or 8) is preserved in the data pack.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/F3-remnant-zip.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F3.} Per-block ZIP distribution of the retained remnant (n = 91 blocks, Mathews only; native percentage points). Takeaway: the remnant clusters near zero; it is an audit artifact, not a finding.}
+\end{figure}
+
+\psub{4.5 Robustness of the accounting itself}
+The exclusion counts were verified three ways: by the streaming pipeline's own audit JSON; by an independent recount of the per-block audit CSV (406,750 lines including header), which reproduces every figure in this section exactly; and by cross-checking the per-study totals against the final report (311,604 $+$ 92,208 $+$ 1,818 $+$ 1,020 $=$ 406,650). The single Hill-fit failure is individually logged with its solver message. The preprocessing progress log shows the streaming run completing all chunks with stable memory after an initial attempt was replaced for exceeding available RAM (incident log, Appendix D); that replacement changed implementation, not scientific rules.
+
+\psub{4.6 Audit caveats (preserved with the package)}
+Three caveats accompany the audit record, none load-bearing:
+\begin{enumerate}\setlength{\itemsep}{1pt}
+\item Amendment A-1 survives embedded verbatim inside the governing lock file; its standalone amended file is absent from the bundle, while its recorded SHA-256 sidecar is present.
+\item \texttt{schema-audit.json} is a partial pre-A-2 scan (5,137,356 rows, no O'Neil label); final counts derive from the full streamed run (7,442,556 rows), which supersedes it.
+\item One cosmetic progress-log counter prints 406,748 at end-of-file while the final audit and block audit record 406,749; the authoritative audit artifacts agree on 406,749.
+\end{enumerate}
+
+\psub{4.7 Tool performance}
+The shipped tool (Section 5.4) processed 7,442,556 rows and 406,749 blocks in approximately 14 minutes on a worker with about 2 GB available RAM, at constant memory, roughly 8,700 rows per second, emitting a per-block disposition for every one of the 406,749 blocks. Table T7 records this.
+
+\begin{center}
+\small
+\textbf{\color{navy}T4. Exclusion-reason breakdown by study (blocks).}\\[4pt]
+\begin{tabular}{|p{3.2cm}|p{2.4cm}|p{2.2cm}|p{2.2cm}|p{2.2cm}|p{2.2cm}|}
+\hline
+\textbf{Reason} & \textbf{ALMANAC} & \textbf{O'Neil} & \textbf{FORCINA} & \textbf{Mathews} & \textbf{Total} \\
+\hline
+E outside [0,1] (whole-block) & 311,604 & 92,208 & 1,818 & 1,020 & 406,650 \\
+\hline
+Same-drug & 0 & 0 & 0 & 7 & 7 \\
+\hline
+Hill-fit failure & 0 & 0 & 0 & 1 & 1 \\
+\hline
+Included & 0 & 0 & 0 & 91 & 91 \\
+\hline
+Selected & 311,604 & 92,208 & 1,818 & 1,119 & 406,749 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\small
+\textbf{\color{navy}T5. Compute and reproducibility.}\\[4pt]
+\begin{tabular}{|p{4.2cm}|p{9.4cm}|}
+\hline
+\textbf{Item} & \textbf{Value} \\
+\hline
+Environment (A-2, exact) & Python 3.11.15; torch 2.4.1+cu121; rdkit 2024.03.6; scikit-learn 1.5.2; pandas 3.0.6; numpy 1.26.4; scipy 1.17.1; synergy 1.0.0 \\
+\hline
+Preprocessing runtime & $\approx$14 min (02:02:58--02:17:15 IST), CPU, constant memory \\
+\hline
+Training / evaluation & 0 GPU-hours; 0 models trained \\
+\hline
+Fixed seeds & 1044, 2044, 3044 (unused; no training) \\
+\hline
+Artifact integrity & 29-file SHA-256 manifest, all verified \\
+\hline
+Lock chain & original 29e22138\ldots; governing A-1+A-2 204cef2b\ldots (Appendix A) \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\small
+\textbf{\color{navy}T7. Tool performance on the demo workload (this experiment).}\\[4pt]
+\begin{tabular}{|p{5.2cm}|p{8.4cm}|}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Throughput & $\approx$8,700 rows/s sustained over 2.0 GB \\
+\hline
+Memory & constant (streaming); completed where a naive in-RAM attempt was killed \\
+\hline
+Disposition coverage & 406,749 of 406,749 blocks (100\%) \\
+\hline
+Verdict output & machine-readable JSON, ledger-ready \\
+\hline
+\end{tabular}
+\end{center}
+\clearpage
+% ================= 5. DISCUSSION =================
+\psec{5.}{Discussion}
+
+\psub{5.1 Interpretation: an invalid run, not a failed hypothesis}
+The DANN hypothesis was never tested. The experiment stopped upstream of modeling because the prospectively locked preprocessing rules removed the entire external target and two of three source studies. Under the preregistration's failure policy, an invalid run is labeled invalid, not negative: an informative negative requires a valid locked pipeline that reaches evaluation and establishes a boundary, and this pipeline never reached evaluation. Accordingly, this paper makes no claim, in either direction, about domain-adversarial transfer for drug-synergy prediction. What it establishes instead is a boundary about the data pipeline: on DrugComb v1.4 raw inhibition values, a strict [0,1] response-domain requirement with no clipping eliminates 99.98\% of dose-matrix blocks in the four largest studies.
+
+\psub{5.2 Why the strict response assumptions broke on this harmonized raw dataset}
+Percent inhibition is a ratio measurement. In raw screening data it routinely exceeds 100 (signal below the untreated baseline, which happens under toxicity, noise, edge effects, or normalization drift) and can fall below 0 (growth stimulation or assay artifacts). That is ordinary behavior for this measurement type. ZIP v1.0.0, however, is a modeling library that assumes fractional responses in [0,1]; feeding it a converted value outside that domain is mathematically undefined for its Hill surface, so the amendment chain excluded the whole block rather than silently repairing it. The alternatives were all worse under preregistration discipline: clipping or winsorizing would have altered the outcome distribution by an unregistered rule chosen after the schema was visible; dropping offending points inside a block would have broken the matrix geometry ZIP requires; computing ZIP on out-of-domain values would have produced numbers with no defined meaning. The lock chose the only option that keeps the outcome definition honest, and the data showed that this option does not survive contact with raw harmonized screens at scale. The failure is therefore located precisely: not in the hypothesis, not in the models, and not in execution, but in the interaction between a strict response domain and real assay noise. That is a useful thing to know before the next lock is written.
+
+\psub{5.3 What survives: the audit chain and the tool}
+The experiment's durable products are process artifacts. First, the audit chain: an immutable lock, two prospective amendments, byte-verified raw inputs, a per-block disposition for all 406,749 blocks, and a machine-readable verdict, all cross-hashed so that any later reader can verify that no outcome-dependent decision occurred. Second, the tool (Section 5.4). Third, a reusable lesson for the next preregistration: a handling rule for raw inhibitions outside [0,100] must be registered explicitly, before outcomes, rather than left to interact with a library's hidden domain assumptions.
+
+\psub{5.4 The tool: a streaming locked-rule ZIP preprocessor and cohort auditor}
+Built on top of this finding is a working auditor: \texttt{preprocess\_zip.py}, the exact code that executed this experiment. Given the raw DrugComb v1.4 archive and the sealed amendment rules, it streams the 2.0 GB CSV in chunks at constant memory, performs unit conversion, block construction, missing-dose and same-drug exclusion, per-block Hill monotherapy fits, ZIP computation, the whole-block range gate, triplet aggregation, and emits a per-block audit CSV plus a machine-readable verdict JSON. Its worked example is this experiment itself (Figure F8; Appendix C is its usage guide). For the program it serves two functions: it is the reference implementation of the A-1/A-2 rules, so any future experiment using those rules inherits a byte-identical preprocessing definition; and it is a general cohort auditor, able to quantify, before any new lock is sealed, how a candidate preprocessing rule would treat a raw archive, so the next preregistration can be written against measured facts instead of assumptions.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/F8-tool.png}
+\vspace{6pt}\par\noindent{\small\textbf{\color{navy}F8.} The shipped tool and its worked example on this experiment. n = 406,749 blocks dispositions. Takeaway: the auditor turns a locked preprocessing rule into a complete, ledger-ready cohort verdict in minutes on constrained hardware.}
+\end{figure}
+
+\psub{5.5 Comparison to prior art}
+The published cross-study feasibility work harmonized these four studies and evaluated transfer, working from processed synergy values rather than the raw archive. This experiment worked from the raw archive under a locked pipeline, which is exactly why its failure mode is new information: the harmonized, analysis-ready numbers used downstream in the literature embody preprocessing choices that the raw archive does not make for you, and a strict-domain pipeline reproducing those numbers from raw data must register those choices explicitly. The audit trail here quantifies one such choice's cost at full scale.
+
+\psub{5.6 Next experiments}
+Any rerun must be a newly numbered experiment with a new pre-outcome lock, per the failure policy. The natural candidate registers an explicit, justified handling rule for out-of-range raw inhibitions (for example a preregistered truncation policy, a different response parameterization, or a different synergy implementation with a documented response domain), keeps the same four-study design, gates, and controls, and uses the auditor from Section 5.4 to verify cohort survival before the lock is sealed. That design work is out of scope for this package by policy: this paper preserves experiment 41 as executed.
+\clearpage
+
+% ================= 6. LIMITATIONS =================
+\psec{6.}{Limitations}
+This paper does not show whether DANN improves cross-study synergy prediction; the hypothesis is untested in both directions. The 91-block Mathews remnant is not a scientific subgroup and supports no claim about Mathews, about other studies, or about any drug pair. The audit quantifies the interaction of one particular locked pipeline with one particular archive version (DrugComb v1.4); other archive versions, other synergy implementations, or other locked rules would produce different attrition, and this paper does not measure them. The Hill-fit failure and the same-drug exclusions are reported as logged, without further investigation, because the failure policy forbids post-hoc exploration that could contaminate a future preregistration. The schema audit's partial early scan is superseded by the full streamed run and retained only for provenance (Section 4.6). Finally, the boundary this paper does establish, that a strict [0,1] response domain with no clipping removes nearly all of the four largest DrugComb studies at the block level, is a property of this data version and this rule; it is a pipeline boundary, not a biological one.
+
+% ================= 7. GRANT READINESS =================
+\psec{7.}{Grant and competition readiness}
+
+\psub{7.1 Novelty, restated for a funder}
+The defensible contributions are: a hash-chained, fully preregistered evaluation protocol for cross-study synergy prediction (Appendix A); a complete per-block audit of the four largest DrugComb studies under an explicit preprocessing contract (Section 4); and a reusable, streaming, constant-memory implementation of that contract with a machine-readable verdict (Section 5.4). Each claim's evidence is inside this package and independently recomputed from the bundled audit CSV.
+
+\psub{7.2 Impact path}
+Combination-screen analysis is bottlenecked by preprocessing choices that are rarely registered or audited. The auditor makes those choices explicit, executable, and verifiable; other groups can run it on the public archive in minutes and inherit a byte-identical preprocessing definition. Measured by: independent reruns reproducing the per-block audit, and adoption of the verdict-JSON contract in program ledgers.
+
+\psub{7.3 Budget-shape next step}
+A small compute grant would fund the successor experiment: a newly preregistered handling rule for out-of-range inhibitions, the full ERM/DANN training plan (capped at 12 GPU-hours in the current lock), the pair-clustered bootstrap, and external evaluation on ALMANAC, reusing this package's raw manifest, environment pin, and auditor unchanged.
+
+\psub{7.4 Fit notes for STS / ISEF / Davidson-style review}
+Submission-grade elements already present: preregistration with timestamped hash chain, locked gates, preserved audit trail, honest invalid classification, and a working tool. What would remain for a competition entry: a completed successor experiment with evaluable gates, and the student's own presentation of both runs as one narrative about methodological rigor.
+
+% ================= 8. REPRODUCIBILITY =================
+\psec{8.}{Reproducibility}
+Everything needed to verify every number in this paper is in the package. Repo (program filing cabinet): protocol (the governing lock with both amendments), code (\texttt{preprocess\_zip.py}, the superseded attempt, figure scripts), this paper's source, and the ledger entry. Drive folder: this paper, the report, all figures at 300 dpi, and the raw data pack (per-block audit CSV, block ZIP values, triplet aggregation, metrics, manifests). Environment: pinned exactly in Section T5. Re-run: obtain DrugComb v1.4 from Zenodo record 18449193, verify the three posted MD5 digests against the raw manifest, then execute \texttt{preprocess\_zip.py} in the pinned environment; expected runtime about 15 minutes on a small CPU worker. Expected result: 406,749 block dispositions identical to the bundled audit CSV, checksums in Appendix D. No GPU is required for reproduction, because no model was trained.
+
+% ================= 9. ETHICS =================
+\psec{9.}{Ethics, data use and attribution}
+All data are public, open-licensed (CC BY 4.0), and de-identified in-vitro measurements; no human subjects, no wet-lab work, no private data. The archive is used under its posted license with attribution to the DrugComb project and the underlying screen authors. This experiment was designed, executed, and packaged with AI tooling assistance within the Science Program, and that assistance is disclosed here; the preregistration, audit chain, and classification policy are the program's standing safeguards. The invalid outcome is preserved and reported exactly as executed, per program policy that negatives and invalids are never suppressed, re-fished, or dressed as findings. No clinical claim is made anywhere in this paper; conclusions are restricted to preprocessing behavior on one public archive version.
+
+% ================= REFERENCES =================
+\psec{}{References}
+\begin{enumerate}\setlength{\itemsep}{1pt}
+\item DrugComb raw data v1.4. Zenodo record 18449193, published 2026-02-01. \url{https://zenodo.org/records/18449193}
+\item DrugComb documentation, response concepts (ZIP, Bliss, Loewe, HSA, S, CSS). \url{https://drugcomb.org/help/}
+\item DrugComb data descriptor and update. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC8218202/} (CC BY 4.0)
+\item NCI-ALMANAC resource pages. \url{https://wiki.nci.nih.gov/display/NCIDTPdata/NCI-ALMANAC}; \url{https://dtp.cancer.gov/ncialmanac/initializePage.do}
+\item Cross-study feasibility study of ALMANAC, O'Neil, FORCINA, Mathews (Communications Biology). \url{https://www.nature.com/articles/s42003-023-04783-5}; code: \url{https://github.com/GuanLab/DrugComb-cross-study-prediction}
+\item Yadav B, et al. Searching for drug synergy in complex dose-response landscapes using an interaction potency model. \emph{Comput Struct Biotechnol J} 2015. doi:10.1016/j.csbj.2015.09.001 (ZIP; \texttt{synergy} package v1.0.0)
+\item Ganin Y, et al. Domain-adversarial training of neural networks. \emph{JMLR} 2016 (gradient reversal).
+\end{enumerate}
+\clearpage
+
+% ================= APPENDIX A =================
+\psec{Appendix A.}{Lock chain and gate log with timestamps}
+\psub{A.1 Immutable lock chain}
+All timestamps IST, 2026-09-23, from preserved file records. SHA-256 values independently recomputed during packaging and matching exactly.
+
+\begin{center}
+\small
+\begin{tabular}{|p{4.6cm}|p{5.2cm}|p{3.6cm}|}
+\hline
+\textbf{Artifact} & \textbf{SHA-256 (prefix)} & \textbf{Sealed (IST)} \\
+\hline
+Original lock (\texttt{phase0-lock.md}) & \texttt{29e2213849aa0725\ldots} & 01:53:57 \\
+\hline
+Amendment A-1 (recorded hash; text embedded verbatim in governing lock) & \texttt{d794d387e2171a55\ldots} & 01:57:25 \\
+\hline
+Governing lock, original + A-1 + A-2 (\texttt{phase0-lock-amended-A1-A2.md}) & \texttt{204cef2b6e0bd93e\ldots} & 02:00:54 \\
+\hline
+First outcome-bearing outputs & --- & 02:17:15 \\
+\hline
+Final execution report & --- & 02:18:05 \\
+\hline
+\end{tabular}
+\end{center}
+
+\psub{A.2 Seal statement}
+The original lock froze the data version and source, the four studies, eligibility rules, the target, features, the group split, seeds, models, optimization, the primary gate, the guardrail, nulls, the uncertainty method, the failure policy, and the compute cap before access to outcome-bearing values. Both amendments are schema-only, invoke the lock's own amendment provision, state that the success gates are unchanged, and were sealed before any ZIP value was computed or summarized. The schema-only inspection between the original lock and the amendments touched only the file header, study labels, and unit fields, and is documented in the schema blocker note; no ZIP value was computed, summarized, or viewed before the amendments were sealed.
+
+\psub{A.3 Failure policy invoked}
+Lock section 8: an invalid run is labeled invalid, not negative; all completed runs are preserved; bugs may be corrected only by written amendment; any new architecture, metric, cohort, split, feature set, or synergy definition is a separately numbered, newly locked experiment. This package is that preservation. Rerun path: newly numbered DOC with a new pre-outcome lock.
+
+% ================= APPENDIX B =================
+\psec{Appendix B.}{The 19-triplet remnant (complete listing)}
+Preprocessing remnant only; not a scientific subgroup (Section 4.4). ZIP in native DrugComb percentage points; \texttt{n\_blocks} is the number of aggregated blocks per triplet.
+
+\begin{center}
+\small
+\begin{tabular}{|p{1.6cm}|p{2.2cm}|p{2.2cm}|p{2.4cm}|p{2.2cm}|p{1.6cm}|}
+\hline
+\textbf{Study} & \textbf{drug A (CID)} & \textbf{drug B (CID)} & \textbf{cell line} & \textbf{ZIP} & \textbf{n blocks} \\
+\hline
+Mathews & 126941 & 24821094 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+Mathews & 148121 & 24821094 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+Mathews & 169371 & 24821094 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+Mathews & 216326 & 24821094 & CVCL\_A442 & $-1.9606$ & 4 \\
+\hline
+Mathews & 11152667 & 24821094 & CVCL\_A442 & $6.3098$ & 1 \\
+\hline
+Mathews & 24821094 & 4993 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+Mathews & 24821094 & 5583 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+Mathews & 24821094 & 5746 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 6253 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 9444 & CVCL\_A442 & $-1.9606$ & 4 \\
+\hline
+Mathews & 24821094 & 31703 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 60699 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 3717450 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 6442177 & CVCL\_A442 & $-1.9607$ & 4 \\
+\hline
+Mathews & 24821094 & 6604814 & CVCL\_A442 & $-1.9606$ & 4 \\
+\hline
+Mathews & 24821094 & 50989217 & CVCL\_A442 & $-1.9606$ & 4 \\
+\hline
+Mathews & 46907787 & 52948550 & CVCL\_A442 & $-1.9606$ & 1 \\
+\hline
+Mathews & 135398491 & 24821094 & CVCL\_A442 & $2.0514$ & 1 \\
+\hline
+Mathews & 135400182 & 24821094 & CVCL\_A442 & $-1.9607$ & 8 \\
+\hline
+\end{tabular}
+\end{center}
+
+% ================= APPENDIX C =================
+\psec{Appendix C.}{Tool usage guide}
+\psub{C.1 What it is}
+\texttt{preprocess\_zip.py}: the reference implementation of the locked A-1/A-2 preprocessing rules and the program's cohort auditor for raw DrugComb archives. Single file, standard scientific-Python dependencies plus \texttt{synergy==1.0.0}.
+\psub{C.2 Install}
+\begin{verbatim}
+python3.11 -m venv .venv && . .venv/bin/activate
+pip install torch==2.4.1 rdkit==2024.03.6 scikit-learn==1.5.2 \
+            pandas==3.0.6 numpy==1.26.4 scipy==1.17.1 synergy==1.0.0
+\end{verbatim}
+\psub{C.3 Run}
+\begin{verbatim}
+python preprocess_zip.py --csv drugcomb_data_v1.4.csv --out outputs/
+\end{verbatim}
+Streams the archive in chunks at constant memory; about 14 minutes for v1.4 on a small CPU worker. Verify the archive's posted MD5 digests first (the auditor assumes a verified input).
+\psub{C.4 Output}
+\texttt{block\_audit.csv} (one disposition row per block: study, size, included/excluded, reason, ZIP for included blocks), \texttt{block\_zip.csv}, \texttt{triplets.csv}, \texttt{preprocess-audit.json} (cohort counts), and a verdict JSON suitable for ledger ingestion. Example output for v1.4 is the worked example in Figure F8 and the bundled data pack.
+\psub{C.5 Intended use}
+Reference preprocessing for any experiment adopting the A-1/A-2 rules, and pre-registration cohort auditing: run candidate rules against a raw archive before sealing a lock, so cohort survival is a measured fact in the lock rather than an assumption.
+
+% ================= APPENDIX D =================
+\psec{Appendix D.}{Raw data pack manifest}
+\psub{D.1 Contents}
+\begin{itemize}\setlength{\itemsep}{1pt}
+\item \texttt{phase0-lock.md}, \texttt{phase0-lock-amended-A1-A2.md} and both \texttt{.sha256} sidecars (the immutable lock chain).
+\item \texttt{plan.md}, \texttt{report.md}, \texttt{sources.md}, \texttt{schema-blocker.md}.
+\item \texttt{outputs/}: \texttt{block\_audit.csv} (406,749 dispositions), \texttt{block\_zip.csv} (91 rows), \texttt{triplets.csv} (19 rows), \texttt{metrics.csv}, \texttt{metrics.json}, \texttt{predictions.csv} (header only; models\_trained = 0), \texttt{preprocess-audit.json}, \texttt{schema-audit.json} (partial early scan, provenance only).
+\item \texttt{code/}: \texttt{preprocess\_zip.py} (the tool), \texttt{preprocess\_zip\_attempt1.py} (preserved superseded attempt).
+\item \texttt{logs/}: install, amendment-install, preprocess, incidents, raw MD5/SHA-256 records, PID.
+\item \texttt{raw-manifest.json} and \texttt{raw/zenodo-record-metadata.json}; pinned environments \texttt{environment-A2.txt} and \texttt{environment-freeze-A1.txt}.
+\item \texttt{artifact-sha256-final.txt}: SHA-256 of every file above (29 entries; all verified during packaging).
+\item Figures F1--F5 and F8 (300 dpi PNG) and this paper's source and PDF.
+\end{itemize}
+\psub{D.2 Raw archive}
+The 2.0 GB raw CSV and the two identifier workbooks are represented by exact source metadata and verified digests rather than duplicated: Zenodo record 18449193, file sizes, posted MD5s, and local SHA-256 values in \texttt{raw-manifest.json}. Fetch and verify against those digests to reproduce.
+\psub{D.3 Checksums}
+The full 29-entry SHA-256 manifest ships in the data pack and is reproduced in the repo ledger entry for this result. The bundle itself (this package as distributed) carries its own SHA-256, recorded in the program ledger.
+
+\end{document}

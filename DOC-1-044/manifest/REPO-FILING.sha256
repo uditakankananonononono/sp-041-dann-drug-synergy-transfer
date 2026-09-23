@@ -1,0 +1,15 @@
+53ca1566397570f2fab742768e3efef51349ab8c7d003a04792b169f55322151  ./DOC-1-044/LEDGER-ENTRY.md
+911f8f6803401eae3c4af60e1c45b80f52e56ff247d9de239acc7302a957912f  ./DOC-1-044/README.md
+3e1df66880d8a1933f75b85f7415ecd5dda406d712e152570807e9ff245f3136  ./DOC-1-044/code/figures/generate_figures.py
+47d01ff2b42f5727ed2be47fe4fc77b8e9c397e79533d283c1c0e309ff6c7d51  ./DOC-1-044/code/preprocess_zip.py
+d2a25be89d390daada82b68df4e017d0f06fa373bf3a824d31aaa12eb67b6535  ./DOC-1-044/code/preprocess_zip_attempt1.py
+8ab443d9bf7851d41a075b610eb891f073ed90d13fdddc577ead8de0fde5b017  ./DOC-1-044/manifest/DOC-1-044-package-manifest.sha256
+ba8dc60f509a46b2c7723c9c3d6890304a8376b2052354590f8c2e230c7e579a  ./DOC-1-044/manifest/REPO-FILING.sha256
+1ea03aa72ef8f92ec1bb1ba3c55293417b3d4556c22c4432de8df76422649d75  ./DOC-1-044/manifest/artifact-sha256-final.txt
+82ba546a19019032b903f47e8c5fe7ddeb7356daec082c1754851749bc41898d  ./DOC-1-044/paper/DOC-1-044-paper.pdf
+04accf297ba84ca6d88fe4a32829464231ffb19eb559f9ae33f04f9037e49617  ./DOC-1-044/paper/DOC-1-044-paper.tex
+204cef2b6e0bd93ebbb73a87647624995a7d5fbfa88afa1aa3a77f86b52ec70f  ./DOC-1-044/protocol/phase0-lock-amended-A1-A2.md
+08fd5b440020bd5611e5ffb6cf4cdc5691febf03742b89ec2d645728d90c62ac  ./DOC-1-044/protocol/phase0-lock-amended-A1-A2.sha256
+f1f13779106100fc6d65ed6681f7bed07c2ef3b0181be55801be16b5d4f7d015  ./DOC-1-044/protocol/phase0-lock-amended-A1.sha256
+29e2213849aa07253f48d7c0f10acb02a57a9de86d04e070421e819732df7fdf  ./DOC-1-044/protocol/phase0-lock.md
+557230eaced67b955e6ec8464e17d08c2da755a419609efde79a2970af4152f8  ./DOC-1-044/tool/README.md

@@ -1,0 +1,7 @@
+EXPERIMENT 41 / DOC-1-044 PHASE-0 LOCK SEAL
+Status: LOCKED, NOT EXECUTED
+Locked artifact: phase0_lock.md
+SHA-256: 29e2213849aa07253f48d7c0f10acb02a57a9de86d04e070421e819732df7fdf
+Locked before access to outcome-bearing values.
+Source provenance: candidate worker reported that it did not download, preview, query, or analyze the outcome-bearing DrugComb CSV and did not execute the experiment.
+Execution condition: verify the exact SHA-256 above before any outcome-bearing data access. Any amendment creates a new version and preserves this seal.
